@@ -1,0 +1,41 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sage.py
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+static/
+node_modules/
+
+# PyCharm
+.idea/
+.vscode/
+
+# Environments
+.env
+.env.*
+.venv/
+venv/
+
+# Docker
+docker-compose.override.yml
+
+# Redis / Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Feeds and uploads
+feeds/
+media/feeds/
+
+# OS
+.DS_Store
+Thumbs.db
