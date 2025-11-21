@@ -1,0 +1,10 @@
+Django==5.0
+Pillow
+psycopg2-binary
+gunicorn
+celery
+redis
+python-dotenv
+djangorestframework
+django-cors-headers
+googletrans==4.0.0-rc1
