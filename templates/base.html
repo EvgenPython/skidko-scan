@@ -1,10 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>{% block title %}SkidkoScan{% endblock %}</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+
 </head>
+
 <body>
-$END$
+
+<header class="main-header">
+
+
+
+    <div class="container header-top">
+
+        <!-- ЛОГО -->
+        <a href="{% url 'index' %}" class="header-logo">
+            SkidkoScan
+        </a>
+
+        <!-- ПОИСК -->
+        <form action="{% url 'product_search' %}" method="get" class="header-search">
+            <input type="text" name="q" placeholder="Поиск товара..." value="{{ search_query|default:'' }}">
+            <button type="submit">🔍</button>
+        </form>
+
+        <!-- АККАУНТ -->
+        <div class="header-user">
+            <a href="#" class="user-link">Войти</a>
+        </div>
+
+        <!-- БУРГЕР -->
+        <div class="header-burger" onclick="toggleMobileMenu()">
+            ☰
+        </div>
+    </div>
+
+    <!-- ============ ДЕСКТОПНОЕ МЕНЮ ============ -->
+    <nav class="header-categories">
+        <ul class="cat-menu">
+
+            {% for cat in categories %}
+                <li class="cat-item">
+
+                    <!-- Категория -->
+                    <a href="{% url 'category_view' cat.id %}" class="cat-link">
+                        {{ cat.name_ru|default:cat.name_en }}
+                    </a>
+
+                    <!-- Подкатегории -->
+                    {% if cat.subcategories.all %}
+                        <ul class="subcat-menu">
+                            {% for sub in cat.subcategories.all %}
+                                <li>
+                                    <a href="{% url 'subcategory_view' sub.id %}">
+                                        {{ sub.name_ru|default:sub.name_en }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                </li>
+            {% endfor %}
+
+        </ul>
+    </nav>
+
+    <!-- ============ МОБИЛЬНОЕ МЕНЮ ============ -->
+    <nav id="mobileMenu" class="mobile-categories">
+        <ul class="mobile-cat-menu">
+
+            {% for cat in categories %}
+                <li class="mobile-cat-item">
+
+                    <!-- Шапка категории -->
+                    <div class="mobile-cat-header" onclick="toggleSubcats({{ cat.id }})">
+                        <a href="{% url 'category_view' cat.id %}">
+                            {{ cat.name_ru|default:cat.name_en }}
+                        </a>
+
+                        {% if cat.subcategories.all %}
+                            <span class="mobile-arrow">▼</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Подкатегории -->
+                    {% if cat.subcategories.all %}
+                        <ul id="subcat-{{ cat.id }}" class="mobile-subcats">
+                            {% for sub in cat.subcategories.all %}
+                                <li>
+                                    <a href="{% url 'subcategory_view' sub.id %}">
+                                        {{ sub.name_ru|default:sub.name_en }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                </li>
+            {% endfor %}
+
+        </ul>
+    </nav>
+
+</header>
+
+<!-- JS мобильного меню -->
+<script>
+    function toggleMobileMenu() {
+        document.getElementById('mobileMenu').classList.toggle('open');
+    }
+
+    function toggleSubcats(id) {
+        const el = document.getElementById('subcat-' + id);
+        if (el) el.classList.toggle('open');
+    }
+</script>
+
+<!-- ============ КОНТЕНТ ============ -->
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ============ ФУТЕР ============ -->
+<footer class="footer">
+    <div class="container">
+        © {{ now|date:"Y" }} SkidkoScan — отслеживание скидок
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </body>
 </html>

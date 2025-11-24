@@ -4,23 +4,39 @@ from django.db import models
 
 # --- Категории ---
 class Category(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    # Английское название — используется для маппинга и логики
+    name_en = models.CharField(max_length=255, unique=True)
 
-    def __str__(self):
-        return self.name
-
-
-class Subcategory(models.Model):
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name="subcategories"
-    )
-    name = models.CharField(max_length=255)
+    # Русское название — отображение на сайте
+    name_ru = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        unique_together = ("category", "name")
+        ordering = ["name_ru", "name_en"]
 
     def __str__(self):
-        return f"{self.category.name} → {self.name}"
+        return self.name_ru or self.name_en
+
+
+# --- Подкатегории ---
+class Subcategory(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="subcategories"
+    )
+
+    # английское имя (как в фидах)
+    name_en = models.CharField(max_length=255)
+
+    # русское имя для отображения
+    name_ru = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        unique_together = ("category", "name_en")
+        ordering = ["name_ru", "name_en"]
+
+    def __str__(self):
+        return f"{self.category} → {self.name_ru or self.name_en}"
 
 
 # --- Магазины ---

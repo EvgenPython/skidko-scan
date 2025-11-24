@@ -2,6 +2,15 @@ from django.db import models
 
 
 class FeedFile(models.Model):
+
+    class Status(models.TextChoices):
+        UPLOADED = "uploaded", "Uploaded"
+        QUEUED = "queued", "Queued"
+        PROCESSING = "processing", "Processing"
+        DONE = "done", "Done"
+        DUPLICATE = "duplicate", "Duplicate"
+        ERROR = "error", "Error"
+
     file = models.FileField(upload_to="feeds/")
     filename = models.CharField(max_length=255, unique=True)
     feed_date = models.DateField()
@@ -10,24 +19,13 @@ class FeedFile(models.Model):
 
     status = models.CharField(
         max_length=20,
-        choices=[
-            ("uploaded", "Uploaded"),      # файл загружен
-            ("queued", "Queued"),          # задача отправлена в Celery
-            ("processing", "Processing"),  # Celery обрабатывает
-            ("done", "Done"),              # завершено
-            ("duplicate", "Duplicate"),    # дубль файла
-            ("error", "Error")             # ошибка
-        ],
-        default="uploaded"
+        choices=Status.choices,
+        default=Status.UPLOADED
     )
 
-    # 🔥 ПРОГРЕСС: от 0 до 100 (обязательно!)
     progress = models.IntegerField(default=0)
-
-    # текстовое сообщение, ошибки и т.п.
     message = models.TextField(blank=True)
 
-    # хеш файла (твой функционал)
     file_hash = models.CharField(max_length=64, blank=True)
 
     def __str__(self):

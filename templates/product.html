@@ -1,10 +1,223 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+    {{ product.title_ru|default:product.title_en }} — SkidkoScan
+{% endblock %}
+
+{% block content %}
+
+<div class="product-page">
+
+    <!-- LEFT: Image + Button -->
+    <div class="product-left">
+        <div class="product-main-image">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.title_ru|default:product.title_en }}">
+            {% else %}
+                <div class="placeholder">Нет изображения</div>
+            {% endif %}
+        </div>
+
+        <a href="{{ product.url }}" target="_blank" class="buy-button">
+            Перейти на Aliexpress
+        </a>
+    </div>
+
+    <!-- RIGHT: Info -->
+    <div class="product-right">
+
+        <h1 class="product-page-title">
+            {{ product.title_ru|default:product.title_en }}
+        </h1>
+
+        <div class="product-page-prices">
+            <span class="current-price">{{ product.price }} {{ product.currency }}</span>
+
+            {% if product.old_price and product.old_price > product.price %}
+                <span class="old-price">{{ product.old_price }} {{ product.currency }}</span>
+
+                {% if discount %}
+                    <span class="discount-badge">
+                        -{{ discount }}%
+                    </span>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if product.category %}
+            <div class="product-category-line">
+                Категория:
+                <strong>
+                    {{ product.category.name_ru|default:product.category.name_en }}
+                </strong>
+            </div>
+        {% endif %}
+
+
+        <!-- ========== ОПИСАНИЕ ТОВАРА ========== -->
+        <div class="product-description">
+            <h3 class="product-section-title">Описание товара</h3>
+
+            {% if product.parsed_params %}
+                <div class="product-params">
+                    {% for item in product.parsed_params %}
+                        <div class="param-item">
+                            <span class="param-icon">{{ item.icon }}</span>
+                            <span class="param-label">{{ item.label }}:</span>
+                            <span class="param-value">{{ item.value }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>Подробное описание отсутствует.</p>
+            {% endif %}
+        </div>
+
+
+        <!-- ========== PRICE CHART ========== -->
+        <div class="price-history">
+            <h3>График изменения цены</h3>
+
+            <div class="price-chart-block">
+                <canvas id="priceChart" width="600" height="260"></canvas>
+
+                <div id="trendBox" class="trend-box"></div>
+                <div id="priceStats" class="price-stats"></div>
+            </div>
+
+            {% if price_history %}
+                <table class="history-table">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Цена</th>
+                    </tr>
+                    {% for h in price_history %}
+                        <tr>
+                            <td>{{ h.date|date:"d.m.Y H:i" }}</td>
+                            <td>{{ h.price }} {{ product.currency }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>Пока нет данных об изменении цены.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const priceLabels = {{ labels|safe }};
+    const priceValues = {{ values|safe }};
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+
+    // === Основные данные ===
+    const firstPrice = priceValues[0];
+    const lastPrice = priceValues[priceValues.length - 1];
+    const minPrice = Math.min(...priceValues);
+    const maxPrice = Math.max(...priceValues);
+    const avgPrice = (priceValues.reduce((a, b) => a + b, 0) / priceValues.length).toFixed(2);
+
+    // === Цвета линии ===
+    let lineColor = 'rgba(60, 100, 255, 1)';
+    let shadowColor = 'rgba(60, 100, 255, 0.3)';
+
+    if (lastPrice < firstPrice) {
+        lineColor = 'rgba(0, 180, 80, 1)';      // зелёный — цена упала
+        shadowColor = 'rgba(0, 180, 80, 0.3)';
+    } else if (lastPrice > firstPrice) {
+        lineColor = 'rgba(255, 50, 50, 1)';    // красный — цена выросла
+        shadowColor = 'rgba(255, 50, 50, 0.3)';
+    }
+
+    // === Градиент ===
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, lineColor.replace('1)', '0.25)'));
+    gradient.addColorStop(1, lineColor.replace('1)', '0)'));
+
+    // === Тренд-карточка ===
+    const trendBox = document.getElementById("trendBox");
+
+    if (lastPrice < firstPrice) {
+        const dropPercent = (((firstPrice - lastPrice) / firstPrice) * 100).toFixed(1);
+        trendBox.innerHTML = `<div class="trend-fall">Цена снизилась на <strong>${dropPercent}%</strong>.</div>`;
+    } else if (lastPrice > firstPrice) {
+        const upPercent = (((lastPrice - firstPrice) / firstPrice) * 100).toFixed(1);
+        trendBox.innerHTML = `<div class="trend-rise">Цена выросла на <strong>${upPercent}%</strong>.</div>`;
+    } else {
+        trendBox.innerHTML = `<div class="trend-stable">Цена стабильна.</div>`;
+    }
+
+    // === Статистика ===
+    document.getElementById("priceStats").innerHTML = `
+        <div><strong>Минимальная:</strong> ${minPrice}</div>
+        <div><strong>Максимальная:</strong> ${maxPrice}</div>
+        <div><strong>Средняя:</strong> ${avgPrice}</div>
+    `;
+
+    // === Chart.js ===
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: priceLabels,
+            datasets: [{
+                label: 'Цена',
+                data: priceValues,
+                borderColor: lineColor,
+                backgroundColor: gradient,
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: lineColor,
+                pointBorderWidth: 3,
+            }]
+        },
+        options: {
+            animation: {
+                duration: 900,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#000',
+                    bodyColor: '#000',
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    displayColors: false,
+                    padding: 10,
+                }
+            },
+            scales: {
+                x: { grid: { display: false }},
+                y: {
+                    beginAtZero: false,
+                    grid: { color: 'rgba(200,200,200,0.2)' }
+                }
+            }
+        },
+        plugins: [{
+            beforeDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = 20;
+                ctx.shadowOffsetY = 10;
+            },
+            afterDraw: (chart) => {
+                chart.ctx.restore();
+            }
+        }]
+    });
+</script>
+
+{% endblock %}

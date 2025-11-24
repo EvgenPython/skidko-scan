@@ -5,15 +5,19 @@ services:
       dockerfile: docker/Dockerfile
     command: gunicorn skidko_scan.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - .:/app                          # исходный код
-      - ./staticfiles:/app/staticfiles  # статика
+      - .:/app
+      - ./staticfiles:/app/staticfiles
     env_file:
       - .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   worker:
     build:
@@ -25,9 +29,15 @@ services:
       - ./staticfiles:/app/staticfiles
     env_file:
       - .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      OPENAI_MODEL: ${OPENAI_MODEL}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   beat:
     build:
@@ -39,9 +49,13 @@ services:
       - ./staticfiles:/app/staticfiles
     env_file:
       - .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   db:
     image: postgres:15
@@ -53,11 +67,21 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skidko"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:6
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   pgdata:

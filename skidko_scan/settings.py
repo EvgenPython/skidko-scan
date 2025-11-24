@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.user_products',
     'apps.feeds',
     'apps.feeds_parser',
+    'apps.seo',
 ]
 
 MIDDLEWARE = [
@@ -65,18 +66,19 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Kiev'
 
 ROOT_URLCONF = 'skidko_scan.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # 👉 наш контекст-процессор категорий
+                'apps.core.context_processors.categories_processor',
             ],
         },
     },

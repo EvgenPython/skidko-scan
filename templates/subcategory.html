@@ -1,10 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ subcategory.name_ru|default:subcategory.name_en }} — SkidkoScan
+{% endblock %}
+
+{% block content %}
+
+    <!-- Заголовок с указанием категории -->
+    <h1 class="page-title">
+        {{ subcategory.name_ru|default:subcategory.name_en }}
+    </h1>
+
+    <p class="subcategory-parent">
+        Категория:
+        <a href="{% url 'category_view' category.id %}">
+            {{ category.name_ru|default:category.name_en }}
+        </a>
+    </p>
+
+    <!-- ========================== СОРТИРОВКА ========================== -->
+
+    <div class="sort-bar">
+        <span>Сортировать:</span>
+
+        <a href="?sort=price_asc"
+           class="sort-link {% if sort == 'price_asc' %}active{% endif %}">
+            Цена ↑
+        </a>
+
+        <a href="?sort=price_desc"
+           class="sort-link {% if sort == 'price_desc' %}active{% endif %}">
+            Цена ↓
+        </a>
+
+        <a href="?sort=discount"
+           class="sort-link {% if sort == 'discount' %}active{% endif %}">
+            Скидка %
+        </a>
+
+        <a href="?sort=new"
+           class="sort-link {% if sort == 'new' %}active{% endif %}">
+            Новые
+        </a>
+
+        <a href="?sort=popular"
+           class="sort-link {% if sort == 'popular' %}active{% endif %}">
+            Популярные
+        </a>
+    </div>
+
+    <hr class="divider">
+
+
+    <!-- ========================== СПИСОК ТОВАРОВ ========================== -->
+
+    {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+                <article class="product-card">
+                    <a href="{% url 'product_detail' product.id %}" class="product-link">
+
+                        <div class="product-image-wrapper">
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}"
+                                     alt="{{ product.title_ru|default:product.title_en }}"
+                                     class="product-image">
+                            {% else %}
+                                <div class="product-image placeholder">Нет изображения</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-info">
+                            <h2 class="product-title">
+                                {{ product.title_ru|default:product.title_en }}
+                            </h2>
+
+                            <div class="product-prices">
+                                <span class="product-price">
+                                    {{ product.price }} {{ product.currency }}
+                                </span>
+
+                                {% if product.old_price and product.old_price > product.price %}
+                                    <span class="product-old-price">
+                                        {{ product.old_price }} {{ product.currency }}
+                                    </span>
+                                    <span class="product-discount-badge">Скидка</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>В этой подкатегории пока нет товаров.</p>
+    {% endif %}
+
+
+    <!-- ========================== ПАГИНАЦИЯ ========================== -->
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&sort={{ sort }}"
+                   class="pagination-btn nav-btn">
+                    ← Назад
+                </a>
+            {% else %}
+                <span class="pagination-btn nav-btn disabled">← Назад</span>
+            {% endif %}
+
+            <span class="pagination-current">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&sort={{ sort }}"
+                   class="pagination-btn nav-btn">
+                    Вперёд →
+                </a>
+            {% else %}
+                <span class="pagination-btn nav-btn disabled">Вперёд →</span>
+            {% endif %}
+
+        </div>
+    {% endif %}
+
+{% endblock %}
