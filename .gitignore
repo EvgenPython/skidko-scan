@@ -20,6 +20,7 @@ node_modules/
 .vscode/
 
 # Environments
+
 .env
 .env.*
 .venv/
