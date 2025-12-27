@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: gunicorn skidko_scan.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn skidko_scan.wsgi:application --bind 0.0.0.0:8000 --workers 1 --timeout 900
     volumes:
       - .:/app
       - ./staticfiles:/app/staticfiles

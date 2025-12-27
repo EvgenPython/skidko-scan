@@ -8,19 +8,18 @@ __pycache__/
 # Django
 *.log
 *.pot
-*.pyc
-__pycache__/
 db.sqlite3
 media/
-static/
+staticfiles/
+
+# Frontend
 node_modules/
 
-# PyCharm
+# IDE
 .idea/
 .vscode/
 
 # Environments
-
 .env
 .env.*
 .venv/
@@ -29,14 +28,22 @@ venv/
 # Docker
 docker-compose.override.yml
 
-# Redis / Celery
+# Celery
 celerybeat-schedule
 celerybeat.pid
 
 # Feeds and uploads
 feeds/
-media/feeds/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+ruff_cache/
+.coverage
+htmlcov/
 
 # OS
 .DS_Store
 Thumbs.db
+*.swp
+*.tmp
